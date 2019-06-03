@@ -1,0 +1,10 @@
+Flask
+requests
+flask-cors
+flask-mysql
+gevent==1.2.1
+python-socketio==1.7.0
+gevent-websocket
+pydash
+pymongo
+boto3==1.7.32

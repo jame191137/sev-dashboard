@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+    sev_dashboard:
+        image: sev_dashboard
+        ports:
+            - "8997:8997"
+        volumes:
+            - ./:/code
+        environment:
+            - ENV=dev
+            - SQL_IP=203.151.50.46
+            - SQL_USERNAME=root
+            - SQL_PASSWORD=sr+p9^5}#4,p>@}A@)-^5~!UX*D*QA
+            - SQL_DB=korkla_test
+            - MONGO_IP=203.151.50.46
+            - MONGO_USERNAME=mongo-onechatalpha-root2
+            - MONGO_PASSWORD=grikt8;k,iyd,yow,jg]nvdg;]kgdbfs
+        restart: always
+        networks:
+            - code-network
+networks:
+    code-network:
+        driver: bridge
