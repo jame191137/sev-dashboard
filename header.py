@@ -4,11 +4,11 @@ from flask import Flask, request, jsonify, current_app, abort
 from flask_cors import CORS, cross_origin
 from flaskext.mysql import MySQL
 import requests
-from gevent import pywsgi
+# from gevent import pywsgi
 import os
-import time
-import datetime
-import pipes
+# import time
+# import datetime
+# import pipes
 
 app = Flask(__name__)
 CORS(app)
