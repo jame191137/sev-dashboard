@@ -29,6 +29,10 @@ app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
 mysql = MySQL()
 mysql.init_app(app)
 
+@app.route('/', methods=['GET'])
+def ok():
+    return 'ok'
+
 @app.route('/login', methods=['POST'])
 def login():
     try:
