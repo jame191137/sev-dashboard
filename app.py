@@ -20,11 +20,9 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-# db.config['MYSQL_DATABASE_USER'] = os.environ['MYSQL_DATABASE_USER']
-# db.config['MYSQL_DATABASE_PASSWORD'] = os.environ['MYSQL_DATABASE_PASSWORD']
-# db.config['MYSQL_DATABASE_DB'] = os.environ['MYSQL_DATABASE_DB']
-# db.config['MYSQL_DATABASE_HOST'] = os.environ['MYSQL_DATABASE_HOST']
+# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+
 
 mysql = MySQL()
 mysql.init_app(app)
