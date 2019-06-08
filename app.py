@@ -217,7 +217,7 @@ def sumyear():
     for i in result:
         # date = str(i['Log_Date']).split()
         # date_Psum.append(date[dayInMonth])
-        month = calendar.month_name[date['dayInMonth']]
+        month = calendar.month_name[i['dayInMonth']]
         monthInYear.append(str(month))
         diff.append(str(i['diff']))
         # diff = [
