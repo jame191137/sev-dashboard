@@ -8,8 +8,10 @@ from flask_cors import CORS, cross_origin
 import requests
 from flaskext.mysql import MySQL
 # from flask import Flask, current_app
+from datetime import datetime
 import os
 from functools import wraps
+import calendar
 # import mysql.connector
 # from gevent import pywsgi
 
@@ -20,8 +22,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -57,15 +59,180 @@ def realtimeusage():
     RT_I2 = result[0]['RT_I2']
     RT_I3 = result[0]['RT_I3']
     RT_ISum = (RT_I1+RT_I2+RT_I3)/3
+    RT_ISum = "%.2f" % RT_ISum
 
     RT_V12 = result[0]['RT_V12']
     RT_V23 = result[0]['RT_V23']
     RT_V31 = result[0]['RT_V31']
     RT_VSum = (RT_V12+RT_V23+RT_V31)/3
     RT_VSum = "%.2f" % RT_VSum
-    # RT_Sum = (RT_I1+RT_I2+RT_I3)/3
-    # return str(RT_ISum)
+
     return jsonify({"status": "success","RT_PSum":str(RT_PSum),"RT_ISum":str(RT_ISum),"RT_VSum":str(RT_VSum)})
+
+@app.route('/getdatart', methods=['POST'])
+def getdatart():
+    
+    data = request.json
+    ZoneID = data['ZoneID']
+    ZoneID = '1'
+    result = querySelect_DB("SELECT RT_kWh_Today,RT_kWh_Daily_Avg,RT_kWh_Monthly,RT_kWh_Monthly_Avg FROM meter_info WHERE ZoneID = '"+ZoneID+"' ")
+    if result == [] or result == False:
+        return jsonify({"status": "fail","message":"not found"})
+    # return str(result)
+    RT_kWh_Today = str(result[0]['RT_kWh_Today'])
+    RT_kWh_Daily_Avg = str(result[0]['RT_kWh_Daily_Avg'])
+    RT_kWh_Monthly = str(result[0]['RT_kWh_Monthly'])
+    RT_kWh_Monthly_Avg = str(result[0]['RT_kWh_Monthly_Avg'])
+
+    return jsonify({"status": "success","RT_kWh_Today":RT_kWh_Today,"RT_kWh_Daily_Avg":RT_kWh_Daily_Avg,"RT_kWh_Monthly":RT_kWh_Monthly,"RT_kWh_Monthly_Avg":RT_kWh_Monthly_Avg})
+
+
+@app.route('/cbuptime', methods=['POST'])
+def cb_uptime():
+    
+    data = request.json
+    ZoneID = data['ZoneID']
+    ZoneID = '1'
+    result = querySelect_DB("SELECT*FROM cb_info WHERE ZoneID = '"+ZoneID+"' ")
+    if result == [] or result == False:
+        return jsonify({"status": "fail","message":"not found"})
+    # return str(result)
+    CB_01_Uptime = result[0]['CB_01_Uptime']
+    CB_02_Uptime = result[0]['CB_02_Uptime']
+    CB_Uptime = []
+    CB_Uptime.append({"CB_01_Uptime":str(CB_01_Uptime)})
+    # CB_Uptime.append({"CB_02_Uptime":CB_02_Uptime})
+    # CB_Uptime.append({"CB_01_Uptime":"0"})
+
+    return jsonify({"status": "success","CB_Uptime":CB_Uptime})
+
+@app.route('/logpsum', methods=['GET'])
+def logpsum():
+
+    result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log LIMIT 8")
+    if result == [] or result == False:
+        return jsonify({"status": "fail","message":"not found"})
+    # return str(result)
+    date_Psum = []
+    Psum = []
+    for i in result:
+        date = str(i['Log_Date']).split()
+        date_Psum.append(date[1])
+        Psum.append(str(i['Log_PSum']))
+
+    return jsonify({"status": "success","date_Psum":date_Psum,"Psum":Psum})
+
+@app.route('/sumday', methods=['GET'])
+def sumday():
+
+    result = querySelect_DB("SELECT Day(log_Date) dayInMonth,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where Month(log_Date) = MONTH(CURDATE()) group by dayInMonth order by dayInMonth")
+    if result == [] or result == False:
+        return jsonify({"status": "fail","message":"not found"})
+    # return str(result)
+    dayInMonth = []
+    diff = []
+    for i in result:
+        # date = str(i['Log_Date']).split()
+        # date_Psum.append(date[dayInMonth])
+        currentMonth = datetime.now().strftime('%h')
+        date = str(currentMonth)+' '+str(i['dayInMonth'])
+        dayInMonth.append(str(date))
+        diff.append(str(i['diff']))
+
+    # dayInMonth =[
+    #     "Jun 4",
+    #     "Jun 5",
+    #     "Jun 6",
+    #     "Jun 7",
+    #     "Jun 8",
+    #     "Jun 9",
+    #     "Jun 10",
+    #     "Jun 11",
+    #     "Jun 12",
+    #     "Jun 13",
+    #     "Jun 14",
+    #     "Jun 15",
+    #     "Jun 16",
+    #     "Jun 17",
+    #     "Jun 18",
+    #     "Jun 19",
+    #     "Jun 20",
+    #     "Jun 21",
+    #     "Jun 22",
+    #     "Jun 23",
+    #     "Jun 24",
+    #     "Jun 25",
+    #     "Jun 26",
+    #     "Jun 27",
+    #     "Jun 28",
+    #     "Jun 29",
+    #     "Jun 30"
+    # ]
+    # diff = [
+    #     "1.00",
+    #     "1.00",
+    #     "1.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "25.00",
+    #     "1.00",
+    #     "1.00",
+    #     "1.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "25.00",
+    #     "1.00",
+    #     "1.00",
+    #     "1.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00",
+    #     "22.00"
+    # ]
+    return jsonify({"status": "success","dayInMonth":dayInMonth,"diff":diff})
+
+@app.route('/sumyear', methods=['GET'])
+def sumyear():
+
+    result = querySelect_DB("SELECT month(log_Date) monthInYear,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where year(log_Date) = year(CURDATE()) group by monthInYear order by monthInYear;")
+    if result == [] or result == False:
+        return jsonify({"status": "fail","message":"not found"})
+    # return str(result)
+    monthInYear = []
+    diff = []
+    for i in result:
+        # date = str(i['Log_Date']).split()
+        # date_Psum.append(date[dayInMonth])
+        month = calendar.month_name[6]
+        monthInYear.append(str(month))
+        diff.append(str(i['diff']))
+        # diff = [
+        #     "1.00",
+        #     "1.00",
+        #     "1.00",
+        #     "22.00",
+        #     "1.00",
+        #     "1.00",
+        #     "22.00",
+        #     "1.00",
+        #     "1.00",
+        #     "22.00"
+        #     ]
+        monthInYear = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+    return jsonify({"status": "success","monthInYear":monthInYear,"diff":diff})
+
 
 def connect_sql():
     def wrap(fn):
