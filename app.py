@@ -217,7 +217,7 @@ def sumyear():
     for i in result:
         # date = str(i['Log_Date']).split()
         # date_Psum.append(date[dayInMonth])
-        month = calendar.month_name[i['dayInMonth']]
+        month = calendar.month_name[i['monthInYear']]
         monthInYear.append(str(month))
         diff.append(str(i['diff']))
         # diff = [
@@ -232,7 +232,7 @@ def sumyear():
         #     "1.00",
         #     "22.00"
         #     ]
-        monthInYear = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        # monthInYear = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
     return jsonify({"status": "success","monthInYear":monthInYear,"diff":diff})
 
