@@ -125,17 +125,20 @@ def logpsum():
 @app.route('/sumday', methods=['GET'])
 def sumday():
 
-    result = querySelect_DB("SELECT Day(log_Date) dayInMonth,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where Month(log_Date) = MONTH(CURDATE()) group by dayInMonth order by dayInMonth")
+    result = querySelect_DB("SELECT month(log_Date) monthInYear,Day(log_Date) dayInMonth,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where Month(log_Date) = MONTH(CURDATE()) group by dayInMonth order by dayInMonth limit 30")
     if result == [] or result == False:
         return jsonify({"status": "fail","message":"not found"})
-    # return str(result)
+    # return str(result[0]['monthInYear'])
     dayInMonth = []
     diff = []
     for i in result:
         # date = str(i['Log_Date']).split()
         # date_Psum.append(date[dayInMonth])
-        currentMonth = datetime.now().strftime('%h')
-        date = str(currentMonth)+' '+str(i['dayInMonth'])
+        # currentMonth = datetime.now().strftime('%h')
+        # date = str(i['Log_Date']).split()
+        # date_Psum.append(date[dayInMonth])
+        month = calendar.month_name[i['monthInYear']]
+        date = str(month)+' '+str(i['dayInMonth'])
         dayInMonth.append(str(date))
         diff.append(str(i['diff']))
 
@@ -214,7 +217,7 @@ def sumyear():
     for i in result:
         # date = str(i['Log_Date']).split()
         # date_Psum.append(date[dayInMonth])
-        month = calendar.month_name[6]
+        month = calendar.month_name[date['dayInMonth']]
         monthInYear.append(str(month))
         diff.append(str(i['diff']))
         # diff = [
