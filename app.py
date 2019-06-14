@@ -97,7 +97,7 @@ def realtimeusage():
     try:
         data = request.json
         ZoneID = data['ZoneID']
-        result = querySelect_DB("SELECT ZoneID,RT_PSum, AVG((RT_V12+RT_V23+RT_V31)/3) as RT_VSum, AVG((RT_I1+RT_I2+RT_I3)/3) as RT_ISum FROM meter_info WHERE ZoneID = '"+ZoneID+"' GROUP BY ZoneID")
+        result = querySelect_DB("SELECT ZoneID,RT_PSum, AVG((RT_V12+RT_V23+RT_V31)/3) as RT_VSum, AVG((RT_I1+RT_I2+RT_I3)/3) as RT_ISum FROM meter_info WHERE ZoneID = '"+ZoneID+"' AND MeterID = '1' GROUP BY ZoneID")
        
         RT_PSum = result[0]['RT_PSum']
         RT_ISum = result[0]['RT_ISum']
@@ -188,6 +188,47 @@ def logpsum():
             Psum.append(str(i['Log_PSum']))
 
         return jsonify({"status": "success","date_Psum":date_Psum,"Psum":Psum})
+    
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+@app.route('/logpsum2', methods=['POST'])
+def logpsum2():
+    try:
+        data = request.json
+        ZoneID = data['ZoneID']
+        list_psum = []
+        result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(ZoneID)+"'")
+        # return  str(result_meter)
+        for i in result_meter:
+            result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+str(i['MeterID'])+"' LIMIT 8")
+            # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+            print str(result)
+            if result == [] or result == False:
+                return jsonify({"status": "fail","message":"not found"})
+            # return str(result)
+            date_Psum = []
+            Psum = []
+            
+
+            if date_Psum == []:
+                for k in result:
+                    date = str(k['Log_Date']).split()
+                    date_Psum.append(date[1])
+
+            
+            for j in result:
+                print str(j['Log_PSum'])
+                Psum.append(str(j['Log_PSum']))
+            name = i['MeterName']            # num = num+1
+        
+
+
+            # return 'ok'
+            # result.append({"name":str(name),"data":Psum })
+            list_psum.append({"name":str(name),"data":Psum })
+
+        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
     
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
