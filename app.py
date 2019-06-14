@@ -22,8 +22,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -80,6 +80,7 @@ def getZone():
             # zone_data.append({"ZoneID":str(i['ZoneID']),"meter_data":meter_data})
             zone_data.append({
             "id":str(i['ZoneID']),
+            # "to": '/dashboard2',
             "to": '/dashboard'+str(i['ZoneID']),
             "icon": 'mdi-view-dashboard',
             "text": 'Zone'+str(i['ZoneID'])
@@ -122,10 +123,10 @@ def getdatart():
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
         # return str(result)
-        RT_kWh_Today = str(result[0]['RT_kWh_Today'])
-        RT_kWh_Daily_Avg = str(result[0]['RT_kWh_Daily_Avg'])
-        RT_kWh_Monthly = str(result[0]['RT_kWh_Monthly'])
-        RT_kWh_Monthly_Avg = str(result[0]['RT_kWh_Monthly_Avg'])
+        RT_kWh_Today = str(int(result[0]['RT_kWh_Today']))
+        RT_kWh_Daily_Avg = str(int(result[0]['RT_kWh_Daily_Avg']))
+        RT_kWh_Monthly = str(int(result[0]['RT_kWh_Monthly']))
+        RT_kWh_Monthly_Avg = str(int(result[0]['RT_kWh_Monthly_Avg']))
 
         return jsonify({"status": "success","RT_kWh_Today":RT_kWh_Today,"RT_kWh_Daily_Avg":RT_kWh_Daily_Avg,"RT_kWh_Monthly":RT_kWh_Monthly,"RT_kWh_Monthly_Avg":RT_kWh_Monthly_Avg})
     except Exception as e:
@@ -174,6 +175,8 @@ def logpsum():
         MeterID = data['MeterID']
 
         result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+        # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+        # return str(result)
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
         # return str(result)
@@ -192,7 +195,7 @@ def logpsum():
 @app.route('/sumday', methods=['POST'])
 def sumday():
     try:
-        result = querySelect_DB("SELECT month(log_Date) monthInYear,Day(log_Date) dayInMonth,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where Month(log_Date) = MONTH(CURDATE()) group by dayInMonth order by dayInMonth limit 30")
+        result = querySelect_DB("SELECT month(log_Date) monthInYear,Day(log_Date) dayInMonth,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where Month(log_Date) = MONTH(CURDATE()) and MeterID = '1' group by dayInMonth order by dayInMonth limit 30")
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
         # return str(result[0]['monthInYear'])
@@ -205,17 +208,24 @@ def sumday():
 
         month = calendar.month_name[result[0]['monthInYear']]
         
-        for x in range(0, int(month_range)+1):
+        for x in range(1, int(month_range)+1):
             date = str(month)+' '+str(x)
             dayInMonth.append(str(date))
             diff.append('0')
             # print str(x)
-            
+        
+
         for i in result:
             # print str(i['dayInMonth'])
             date = str(month)+' '+str(i['dayInMonth'])
             dayInMonth[i['dayInMonth']] = str(date)
-            diff[i['dayInMonth']] = str(i['diff'])
+            diff2 = float(i['diff'])/1000
+
+            diff2 = "%.1f" % diff2
+            if str(diff2) == '0.00':
+                diff2 = 0
+            # return str(diff)
+            diff[i['dayInMonth']] = str(diff2)
 
         # dayInMonth =[
         #     "Jun 4",
@@ -303,7 +313,12 @@ def sumyear():
             # print str(i['dayInMonth'])
             # date = str(month)+' '+str(result[0]['dayInMonth'])
             monthInYear[i['monthInYear']-1] = str(calendar.month_name[i['monthInYear']])
-            diff[i['monthInYear']-1] = str(i['diff'])
+            diff2 = float(i['diff'])/1000
+
+            diff2 = "%.1f" % diff2
+            if str(diff2) == '0.00':
+                diff2 = 0
+            diff[i['monthInYear']-1] = str(diff2)
 
         # for i in result:
         #     # date = str(i['Log_Date']).split()
