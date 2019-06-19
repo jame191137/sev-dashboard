@@ -45,10 +45,52 @@ def login():
         result = querySelect_DB("SELECT * FROM users WHERE UName = '"+username+"' AND UPass = '"+password+"'")
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"}) 
+        result_name = querySelect_DB("SELECT * FROM site_info WHERE SiteID = '"+str(result[0]['SiteID'])+"'")
 
-        return jsonify({"status": "success","UPrivilege":result[0]['UPrivilege'],"SiteID":result[0]['SiteID']})
+        return jsonify({"status": "success","UPrivilege":result[0]['UPrivilege'],"SiteID":result[0]['SiteID'],"SiteName":result_name[0]['SiteName']})
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
+
+
+@app.route('/datatable', methods=['POST'])
+def datatable():
+    try:
+        data = request.json
+        MeterID = data['MeterID']
+        list_data = []
+        result_meter = querySelect_DB("SELECT*FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+        # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+        # return str(result)
+        if result_meter == [] or result_meter == False:
+            return jsonify({"status": "fail","message":"not found"})
+        # return str(result)
+        for i in result_meter:
+            list_data.append(
+                {
+                "Log_Date":str(i['Log_Date']),
+                "Log_V1":str(i['Log_V1']),
+                "Log_V2":str(i['Log_V2']),
+                "Log_V3":str(i['Log_V3']),
+
+                })
+
+        return jsonify({"status": "success","list_data":list_data})
+    
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+# @app.route('/get', methods=['POST'])
+# def getZone():
+#     try:
+#         data = request.json
+#         SiteID = data['SiteID']
+#         # return password
+#         result = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+SiteID+"'")
+#         if result ==
+
+#         return jsonify({"status": "success","zone_data":zone_data})
+#     except Exception as e:
+#         return jsonify({"status": "fail","message":str(e)})
 
 @app.route('/getzone', methods=['POST'])
 def getZone():
@@ -93,6 +135,23 @@ def getZone():
         return jsonify({"status": "fail","message":str(e)})
 
 
+@app.route('/getlistzone', methods=['POST'])
+def getlistzone():
+    try:
+        data = request.json
+        SiteID = data['SiteID']
+
+        result = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"' ")
+        if result == [] or result == False:
+            return jsonify({"status": "fail","message":"zone found"})        
+        list_zone = []
+        for i in result:
+            list_zone.append(i['ZoneID'])
+
+        return jsonify({"status": "success","list_zone":list_zone})
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
 @app.route('/getnumzone', methods=['GET'])
 def getnumzone():
     try:
@@ -128,6 +187,8 @@ def realtimeusage():
         return jsonify({"status": "success","RT_PSum":str(RT_PSum),"RT_ISum":str(RT_ISum),"RT_VSum":str(RT_VSum)})
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
+
+   
 
 @app.route('/getdatart', methods=['POST'])
 def getdatart():
@@ -276,82 +337,101 @@ def logpsum2():
     except Exception as e:
         return jsonify({"status": "fail"})
 
+
+@app.route('/logpsum3', methods=['POST'])
+def logpsum3():
+    try:
+        data = request.json
+        SiteID = data['SiteID']
+        list_psum = []
+        result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+       
+
+        for r in result_site:
+
+            result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
+            # return  str(result_meter)
+            for i in result_meter:
+                result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+str(i['MeterID'])+"' LIMIT 8")
+                # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+                print str(result)
+                if result == [] or result == False:
+                    return jsonify({"status": "fail","message":"not found"})
+                # return str(result)
+                date_Psum = []
+                Psum = []
+                
+
+                if date_Psum == []:
+                    for k in result:
+                        date = str(k['Log_Date']).split()
+                        date_Psum.append(date[1])
+
+                
+                for j in result:
+                    print str(j['Log_PSum'])
+                    Psum.append(str(j['Log_PSum']))
+                name = i['MeterName']            # num = num+1
+            
+
+
+            # return 'ok'
+            # result.append({"name":str(name),"data":Psum })
+                list_psum.append({"name":str(name),"data":Psum })
+
+        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
+    
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
 @app.route('/datameter', methods=['POST'])
 def datameter():
     try:
         data = request.json
 
-        ZoneID = data['ZoneID']
+        SiteID = data['SiteID']
         list_data = []
-        result_meter = querySelect_DB("SELECT * FROM meter_info WHERE ZoneID = '"+str(ZoneID)+"'")
-        if result_meter == [] or result_meter == False:
-            return jsonify({"status": "fail","message":"not found"})
-        # result_meter = result_meter[0]
+        result_zone = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+SiteID+"'")
+
+        for r in result_zone:
+            result_meter = querySelect_DB("SELECT * FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
+            if result_meter == [] or result_meter == False:
+                return jsonify({"status": "fail","message":"not found"})
+            # result_meter = result_meter[0]
 
 
-        for i in result_meter:
-            list_data.append(
-                {
-                "MeterName":str(i['MeterName']),
-                "RT_V1":str(i['RT_V1']),
-                "RT_V2":str(i['RT_V2']),
-                "RT_V3":str(i['RT_V3']),
-                "RT_V12":str(i['RT_V12']),
-                "RT_V23":str(i['RT_V23']),
-                "RT_V31":str(i['RT_V31']),
-                "RT_I1":str(i['RT_I1']),
-                "RT_I2":str(i['RT_I2']),
-                "RT_I3":str(i['RT_I3']),
-                "RT_In":str(i['RT_In']),
-                "RT_Pa":str(i['RT_Pa']),
-                "RT_Pb":str(i['RT_Pb']),
-                "RT_Pc":str(i['RT_Pc']),
-                "RT_PSum":str(i['RT_PSum']),
-                "RT_Qa":str(i['RT_Qa']),
-                "RT_Qb":str(i['RT_Qb']),
-                "RT_Qc":str(i['RT_Qc']),
-                "RT_PFa":str(i['RT_PFa']),
-                "RT_PFb":str(i['RT_PFb']),
-                "RT_PFc":str(i['RT_PFc']),
-                "RT_PFSum":str(i['RT_PFSum']),
-                "RT_Sa":str(i['RT_Sa']),
-                "RT_Sb":str(i['RT_Sb']),
-                "RT_Sc":str(i['RT_Sc']),
-                "RT_F":str(i['RT_F']),
-                "RT_kWh":str(i['RT_kWh']),
-                })
-        for i in result_meter:
-            list_data.append(
-                {
-                "MeterName":str(i['MeterName']),
-                "RT_V1":str(i['RT_V1']),
-                "RT_V2":str(i['RT_V2']),
-                "RT_V3":str(i['RT_V3']),
-                "RT_V12":str(i['RT_V12']),
-                "RT_V23":str(i['RT_V23']),
-                "RT_V31":str(i['RT_V31']),
-                "RT_I1":str(i['RT_I1']),
-                "RT_I2":str(i['RT_I2']),
-                "RT_I3":str(i['RT_I3']),
-                "RT_In":str(i['RT_In']),
-                "RT_Pa":str(i['RT_Pa']),
-                "RT_Pb":str(i['RT_Pb']),
-                "RT_Pc":str(i['RT_Pc']),
-                "RT_PSum":str(i['RT_PSum']),
-                "RT_Qa":str(i['RT_Qa']),
-                "RT_Qb":str(i['RT_Qb']),
-                "RT_Qc":str(i['RT_Qc']),
-                "RT_PFa":str(i['RT_PFa']),
-                "RT_PFb":str(i['RT_PFb']),
-                "RT_PFc":str(i['RT_PFc']),
-                "RT_PFSum":str(i['RT_PFSum']),
-                "RT_Sa":str(i['RT_Sa']),
-                "RT_Sb":str(i['RT_Sb']),
-                "RT_Sc":str(i['RT_Sc']),
-                "RT_F":str(i['RT_F']),
-                "RT_kWh":str(i['RT_kWh']),
-                })
-
+            for i in result_meter:
+                list_data.append(
+                    {
+                    "MeterName":str(i['MeterName']),
+                    "RT_V1":str(i['RT_V1']),
+                    "RT_V2":str(i['RT_V2']),
+                    "RT_V3":str(i['RT_V3']),
+                    "RT_V12":str(i['RT_V12']),
+                    "RT_V23":str(i['RT_V23']),
+                    "RT_V31":str(i['RT_V31']),
+                    "RT_I1":str(i['RT_I1']),
+                    "RT_I2":str(i['RT_I2']),
+                    "RT_I3":str(i['RT_I3']),
+                    "RT_In":str(i['RT_In']),
+                    "RT_Pa":str(i['RT_Pa']),
+                    "RT_Pb":str(i['RT_Pb']),
+                    "RT_Pc":str(i['RT_Pc']),
+                    "RT_PSum":str(i['RT_PSum']),
+                    "RT_Qa":str(i['RT_Qa']),
+                    "RT_Qb":str(i['RT_Qb']),
+                    "RT_Qc":str(i['RT_Qc']),
+                    "RT_PFa":str(i['RT_PFa']),
+                    "RT_PFb":str(i['RT_PFb']),
+                    "RT_PFc":str(i['RT_PFc']),
+                    "RT_PFSum":str(i['RT_PFSum']),
+                    "RT_Sa":str(i['RT_Sa']),
+                    "RT_Sb":str(i['RT_Sb']),
+                    "RT_Sc":str(i['RT_Sc']),
+                    "RT_F":str(i['RT_F']),
+                    "RT_kWh":str(i['RT_kWh']),
+                    })
+        
 
         return jsonify({"status": "success","datameter":list_data})
     
@@ -365,7 +445,7 @@ def logpsumall():
 
         SiteID = data['SiteID']
         list_psum = []
-        date_Psum = []
+        date_Psum = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"]
         Psum = []
         # return password
         diff = []
@@ -374,7 +454,7 @@ def logpsumall():
         time_stop = str(now.date())+ " 23:59:59"
 
         result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
-       
+        # return 's'
         for s in result_site:
         
             result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(s['ZoneID'])+"'")
@@ -382,20 +462,20 @@ def logpsumall():
             for i in result_meter:
                 result_log = querySelect_DB("SELECT Hour(log_Date) HourInDay,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where day(log_Date) = day(CURDATE())  and MeterID = '"+str(i['MeterID'])+"' group by HourInDay order by HourInDay")
                 # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
-                # print str(result)
-                if result_log == [] or result_log == False:
-                    return jsonify({"status": "fail","message":"not found"})
-                # return str(result)
-                date_Psum = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"]
+                # return str(result_log)
+                if result_log == False:
+                    return jsonify({"status": "fail","message":"query fail"})
+                    # return str(result)
                 Psum = []
-                
                 for d in date_Psum:
                     Psum.append("0")
 
-                # for k in date_Psum:
-                for j in result_log:
-                     Psum[j['HourInDay']] = str(j['diff'])
+                if result_log != [] :
+   
+                    for j in result_log:
+                         Psum[j['HourInDay']] = str(j['diff'])
 
+   
 
                 name = "ZoneID " +str(s['ZoneID'])+" ("+i['MeterName']+")" 
 
