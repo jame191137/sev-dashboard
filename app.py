@@ -56,13 +56,21 @@ def login():
 def datatable():
     try:
         data = request.json
+
+        dateStart = data['dateStart']
+        dateEnd = data['dateEnd']
         MeterID = data['MeterID']
+
+        # dateEnd = str(dateEnd) + ' 00:00:00'
+        # MeterID = str(MeterID) + ' 00:00:00'
         list_data = []
-        result_meter = querySelect_DB("SELECT*FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+        result_meter = querySelect_DB("SELECT*FROM meter_log WHERE MeterID = '"+MeterID+"' AND Log_Date >= '"+str(dateStart)+"' AND Log_Date <= '"+str(dateEnd)+"'   ")
         # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
-        # return str(result)
+        # return str(result_meter)
         if result_meter == [] or result_meter == False:
             return jsonify({"status": "fail","message":"not found"})
+            # return jsonify({"status": "success","list_data":[]})
+
         # return str(result)
         for i in result_meter:
             list_data.append(
@@ -71,26 +79,58 @@ def datatable():
                 "Log_V1":str(i['Log_V1']),
                 "Log_V2":str(i['Log_V2']),
                 "Log_V3":str(i['Log_V3']),
-
+                "Log_V12":str(i['Log_V12']),
+                "Log_V23":str(i['Log_V23']),
+                "Log_V31":str(i['Log_V31']),
+                "Log_I1":str(i['Log_I1']),
+                "Log_I2":str(i['Log_I2']),
+                "Log_I3":str(i['Log_I3']),
+                "Log_In":str(i['Log_In']),
+                "Log_Pa":str(i['Log_Pa']),
+                "Log_Pb":str(i['Log_Pb']),
+                "Log_Pc":str(i['Log_Pc']),
+                "Log_PSum":str(i['Log_PSum']),
+                "Log_Qa":str(i['Log_Qa']),
+                "Log_Qb":str(i['Log_Qb']),
+                "Log_Qc":str(i['Log_Qc']),
+                "Log_PFa":str(i['Log_PFa']),
+                "Log_PFb":str(i['Log_PFb']),
+                "Log_PFc":str(i['Log_PFc']),
+                "Log_PFSum":str(i['Log_PFSum']),
+                "Log_Sa":str(i['Log_Sa']),
+                "Log_Sb":str(i['Log_Sb']),
+                "Log_Sc":str(i['Log_Sc']),
+                "Log_F":str(i['Log_F']),
+                "Log_kWh":str(i['Log_kWh']),
+                "Log_kWh_Diff":str(i['Log_kWh_Diff'])
                 })
-
+        # print str(list_data)
         return jsonify({"status": "success","list_data":list_data})
     
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
-# @app.route('/get', methods=['POST'])
-# def getZone():
-#     try:
-#         data = request.json
-#         SiteID = data['SiteID']
-#         # return password
-#         result = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+SiteID+"'")
-#         if result ==
+@app.route('/getmeter', methods=['POST'])
+def getMeter():
+    try:
+        data = request.json
+        ZoneID = data['ZoneID']
+        # return password
+        result = querySelect_DB("SELECT * FROM meter_info WHERE ZoneID = '"+ZoneID+"'")
+        if result == [] or result == False:
+            return jsonify({"status": "success","meter_data":[]})
+        
+        meter_data = []
 
-#         return jsonify({"status": "success","zone_data":zone_data})
-#     except Exception as e:
-#         return jsonify({"status": "fail","message":str(e)})
+        for i in result:
+             meter_data.append({
+                "id":str(i['MeterID']),
+                "text": str(i['MeterName'])
+             })
+
+        return jsonify({"status": "success","meter_data":meter_data})
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
 
 @app.route('/getzone', methods=['POST'])
 def getZone():
@@ -107,28 +147,14 @@ def getZone():
         zone_data = []
         # num = 1
         for i in result:
-            # meter_data = []
-
-            # #result_meter = querySelect_DB("SELECT * FROM meter_info WHERE ZoneID = '"+i+"' ")
-            # result_meter = querySelect_DB("SELECT * FROM meter_info WHERE ZoneID = '"+str(i['ZoneID'])+"' ")
-            # # result = querySelect_DB("SELECT * FROM meter_info WHERE '1' ")
-            # if result_meter == [] or result_meter == False:
-            #     return jsonify({"status": "fail","message":"not found"})
-            # # return 'ok'
-            # for j in result_meter:
-            #     meter_data.append({"MeterID":str(j['MeterID'])})
-
-            #result_zone = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+i['ZoneID']+"'")
-            # zone_data.append({"ZoneID":str(i['ZoneID']),"meter_data":meter_data})
             zone_data.append({
-            "id":str(i['ZoneID']),
-            # "to": '/dashboard2',
-            "to": '/dashboard'+str(i['ZoneID']),
-            "icon": 'mdi-view-dashboard',
-            "text": 'Zone'+str(i['ZoneID'])
+                "id":str(i['ZoneID']),
+                # "to": '/dashboard2',
+                "to": '/dashboard'+str(i['ZoneID']),
+                "icon": 'mdi-view-dashboard',
+                "text": str(i['ZoneName'])
              })
-            # str(i['ZoneID']))
-            # num = num+1
+
 
         return jsonify({"status": "success","zone_data":zone_data})
     except Exception as e:
@@ -403,6 +429,7 @@ def datameter():
             for i in result_meter:
                 list_data.append(
                     {
+                    "ZoneName":str(r['ZoneName']),
                     "MeterName":str(i['MeterName']),
                     "RT_V1":str(i['RT_V1']),
                     "RT_V2":str(i['RT_V2']),
