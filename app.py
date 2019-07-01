@@ -22,8 +22,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -192,7 +192,7 @@ def realtimeusage():
     try:
         data = request.json
         ZoneID = data['ZoneID']
-        result = querySelect_DB("SELECT ZoneID,RT_PSum, AVG((RT_V12+RT_V23+RT_V31)/3) as RT_VSum, AVG((RT_I1+RT_I2+RT_I3)/3) as RT_ISum FROM meter_info WHERE ZoneID = '"+ZoneID+"' AND MeterID = '1' GROUP BY ZoneID")
+        result = querySelect_DB("SELECT ZoneID,RT_PSum, AVG((RT_V12+RT_V23+RT_V31)/3) as RT_VSum, AVG((RT_I1+RT_I2+RT_I3)/3) as RT_ISum FROM meter_info WHERE ZoneID = '"+ZoneID+"' AND MeterID = '"+ZoneID+"' GROUP BY ZoneID")
         # return str(result)
         if result == [] or result == False:
             RT_PSum = "0"
@@ -296,29 +296,72 @@ def cb_uptime():
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
+# @app.route('/logpsum', methods=['POST'])
+# def logpsum():
+#     try:
+#         data = request.json
+#         MeterID = data['MeterID']
+
+#         result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+#         # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+#         # return str(result)
+#         if result == [] or result == False:
+#             return jsonify({"status": "fail","message":"not found"})
+#         # return str(result)
+#         date_Psum = []
+#         Psum = []
+#         for i in result:
+#             date = str(i['Log_Date']).split()
+#             date_Psum.append(date[1])
+#             Psum.append(str(i['Log_PSum']))
+
+#         return jsonify({"status": "success","date_Psum":date_Psum,"Psum":Psum})
+    
+#     except Exception as e:
+#         return jsonify({"status": "fail","message":str(e)})
+
 @app.route('/logpsum', methods=['POST'])
-def logpsum():
+def logpsumnew():
     try:
         data = request.json
         MeterID = data['MeterID']
-
-        result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
-        # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
-        # return str(result)
-        if result == [] or result == False:
-            return jsonify({"status": "fail","message":"not found"})
-        # return str(result)
+        list_psum = []
         date_Psum = []
         Psum = []
-        for i in result:
-            date = str(i['Log_Date']).split()
-            date_Psum.append(date[1])
-            Psum.append(str(i['Log_PSum']))
+        result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE MeterID = '"+str(MeterID)+"'")
+        # return  str(result_meter)
+        for i in result_meter:
+            result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+str(MeterID)+"' LIMIT 8")
+            # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+            print str(result)
+            if result == [] or result == False:
+                return jsonify({"status": "fail","message":"not found"})
+            # return str(result)
+            date_Psum = []
+            Psum = []
+            
 
-        return jsonify({"status": "success","date_Psum":date_Psum,"Psum":Psum})
+            if date_Psum == []:
+                for k in result:
+                    date = str(k['Log_Date']).split()
+                    date_Psum.append(date[1])
+
+            
+            for j in result:
+                print str(j['Log_PSum'])
+                Psum.append(str(j['Log_PSum']))
+            name = i['MeterName']            # num = num+1
+        
+
+
+            # return 'ok'
+            # result.append({"name":str(name),"data":Psum })
+            list_psum.append({"name":str(name),"data":Psum })
+
+        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
     
     except Exception as e:
-        return jsonify({"status": "fail","message":str(e)})
+        return jsonify({"status": "fail"})
 
 @app.route('/logpsum2', methods=['POST'])
 def logpsum2():
