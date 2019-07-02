@@ -15,6 +15,7 @@ import calendar
 # import mysql.connector
 # from gevent import pywsgi
 
+
 app = Flask(__name__,)
 
 CORS(app, resources={r"/*": {"origins": "*"}} )
@@ -331,7 +332,7 @@ def logpsumnew():
         result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE MeterID = '"+str(MeterID)+"'")
         # return  str(result_meter)
         for i in result_meter:
-            result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+str(MeterID)+"' LIMIT 8")
+            result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+str(MeterID)+"' ORDER BY Log_Date DESC LIMIT 8")
             # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
             print str(result)
             if result == [] or result == False:
