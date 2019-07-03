@@ -321,6 +321,9 @@ def cb_uptime():
 #     except Exception as e:
 #         return jsonify({"status": "fail","message":str(e)})
 
+def Reverse(lst): 
+    return [ele for ele in reversed(lst)] 
+
 @app.route('/logpsum', methods=['POST'])
 def logpsumnew():
     try:
@@ -357,9 +360,11 @@ def logpsumnew():
 
             # return 'ok'
             # result.append({"name":str(name),"data":Psum })
-            list_psum.append({"name":str(name),"data":Psum })
-
-        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
+            list_psum.append({"name":str(name),"data":Reverse(Psum) })
+            # return str(Reverse(date_Psum))
+            # re_date_Psum = date_Psum.reverse()
+            # return str(re_date_Psum)
+        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":Reverse(date_Psum)})
     
     except Exception as e:
         return jsonify({"status": "fail"})
