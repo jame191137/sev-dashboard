@@ -544,7 +544,7 @@ def logpsumall():
                     # return str(result)
                 Psum = []
                 for d in date_Psum:
-                    Psum.append("0")
+                    Psum.append("")
 
                 if result_log != [] :
    
