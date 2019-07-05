@@ -341,7 +341,7 @@ def logpsumavg():
 
 
 
-        result = querySelect_DB("SELECT Log_Date,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 2 HOUR) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC LIMIT 8")
+        result = querySelect_DB("SELECT Log_Date,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 2 HOUR) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC")
         # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
         # print str(result)
 
@@ -396,7 +396,7 @@ def logpsumnew():
         result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE MeterID = '"+str(MeterID)+"'")
         # return  str(result_meter)
         for i in result_meter:
-            result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+str(MeterID)+"' ORDER BY Log_Date DESC LIMIT 8")
+            result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 2 HOUR) and MeterID = '"+str(MeterID)+"' ORDER BY Log_Date DESC")
             # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
             print str(result)
             if result == [] or result == False:
