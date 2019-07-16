@@ -23,8 +23,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -45,7 +45,7 @@ def login():
         # return password
         result = querySelect_DB("SELECT * FROM users WHERE UName = '"+username+"' AND UPass = '"+password+"'")
         if result == [] or result == False:
-            return jsonify({"status": "fail","message":"not found"}) 
+            return jsonify({"status": "fail","message":"not found"})
         result_name = querySelect_DB("SELECT * FROM site_info WHERE SiteID = '"+str(result[0]['SiteID'])+"'")
 
         return jsonify({"status": "success","UPrivilege":result[0]['UPrivilege'],"SiteID":result[0]['SiteID'],"SiteName":result_name[0]['SiteName']})
@@ -107,7 +107,7 @@ def datatable():
                 })
         # print str(list_data)
         return jsonify({"status": "success","list_data":list_data})
-    
+
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
@@ -120,7 +120,7 @@ def getMeter():
         result = querySelect_DB("SELECT * FROM meter_info WHERE ZoneID = '"+ZoneID+"'")
         if result == [] or result == False:
             return jsonify({"status": "success","meter_data":[]})
-        
+
         meter_data = []
 
         for i in result:
@@ -141,10 +141,10 @@ def getZone():
         # return password
         result = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+SiteID+"'")
         if result == [] or result == False:
-            return jsonify({"status": "fail","message":"not found"})        
+            return jsonify({"status": "fail","message":"not found"})
 
 
-       
+
         zone_data = []
         # num = 1
         for i in result:
@@ -170,7 +170,7 @@ def getlistzone():
 
         result = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"' ")
         if result == [] or result == False:
-            return jsonify({"status": "fail","message":"zone found"})        
+            return jsonify({"status": "fail","message":"zone found"})
         list_zone = []
         for i in result:
             list_zone.append(i['ZoneID'])
@@ -215,7 +215,7 @@ def realtimeusage():
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
-   
+
 
 @app.route('/getdatart', methods=['POST'])
 def getdatart():
@@ -277,7 +277,7 @@ def cb_uptime():
         # CB_Uptime.append({"CB_01_Uptime":str(CB_01_Uptime)})
         # num = 0
         # for i in result:
-           
+
         CB_Uptime.append(
             {
                 "id": "1",
@@ -289,7 +289,7 @@ def cb_uptime():
                 "name":'Uptime 2',
                 "value":str(CB_02_Uptime)
             })
-        
+
         # CB_Uptime.append({"CB_02_Uptime":CB_02_Uptime})
         # CB_Uptime.append({"CB_01_Uptime":"0"})
 
@@ -317,7 +317,7 @@ def cb_uptime():
 #             Psum.append(str(i['Log_PSum']))
 
 #         return jsonify({"status": "success","date_Psum":date_Psum,"Psum":Psum})
-    
+
 #     except Exception as e:
 #         return jsonify({"status": "fail","message":str(e)})
 
@@ -330,7 +330,7 @@ def logpsumavg():
         date_Psum = []
         Psum = []
         result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
-       
+
         list_meter = []
         for r in result_site:
 
@@ -339,9 +339,8 @@ def logpsumavg():
 
         # return str(list_meter)
 
-
-
-        result = querySelect_DB("SELECT Log_Date,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 2 HOUR) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC")
+        #result = querySelect_DB("SELECT Log_Date,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 2 HOUR) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC")
+        result = querySelect_DB("SELECT Log_Date,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE day(log_date) = day(curdate()) and month(log_date) = month(curdate()) and year(log_date) = year(curdate()) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC")
         # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
         # print str(result)
 
@@ -351,14 +350,14 @@ def logpsumavg():
         date_Psum = []
         Psum = []
         baseLine = []
-        
+
 
         if date_Psum == []:
             for k in result:
                 date = str(k['Log_Date']).split()
                 date_Psum.append(date[1])
 
-        
+
         for j in result:
             print str(j['Log_PSum'])
             Psum.append(str(j['Log_PSum']))
@@ -367,7 +366,7 @@ def logpsumavg():
             print str(j['baseLine'])
             baseLine.append(str(j['baseLine']))
         name = 'Meter'            # num = num+1
-    
+
 
 
         # return 'ok'
@@ -378,12 +377,12 @@ def logpsumavg():
         # re_date_Psum = date_Psum.reverse()
         # return str(re_date_Psum)
         return jsonify({"status": "success","list_psum":list_psum,"date_Psum":Reverse(date_Psum)})
-    
+
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
-def Reverse(lst): 
-    return [ele for ele in reversed(lst)] 
+def Reverse(lst):
+    return [ele for ele in reversed(lst)]
 
 @app.route('/logpsum', methods=['POST'])
 def logpsumnew():
@@ -404,19 +403,19 @@ def logpsumnew():
             # return str(result)
             date_Psum = []
             Psum = []
-            
+
 
             if date_Psum == []:
                 for k in result:
                     date = str(k['Log_Date']).split()
                     date_Psum.append(date[1])
 
-            
+
             for j in result:
                 print str(j['Log_PSum'])
                 Psum.append(str(j['Log_PSum']))
             name = i['MeterName']            # num = num+1
-        
+
 
 
             # return 'ok'
@@ -426,7 +425,7 @@ def logpsumnew():
             # re_date_Psum = date_Psum.reverse()
             # return str(re_date_Psum)
         return jsonify({"status": "success","list_psum":list_psum,"date_Psum":Reverse(date_Psum)})
-    
+
     except Exception as e:
         return jsonify({"status": "fail"})
 
@@ -449,19 +448,19 @@ def logpsum2():
             # return str(result)
             date_Psum = []
             Psum = []
-            
+
 
             if date_Psum == []:
                 for k in result:
                     date = str(k['Log_Date']).split()
                     date_Psum.append(date[1])
 
-            
+
             for j in result:
                 print str(j['Log_PSum'])
                 Psum.append(str(j['Log_PSum']))
             name = i['MeterName']            # num = num+1
-        
+
 
 
             # return 'ok'
@@ -469,7 +468,7 @@ def logpsum2():
             list_psum.append({"name":str(name),"data":Psum })
 
         return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
-    
+
     except Exception as e:
         return jsonify({"status": "fail"})
 
@@ -481,7 +480,7 @@ def logpsum3():
         SiteID = data['SiteID']
         list_psum = []
         result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
-       
+
 
         for r in result_site:
 
@@ -496,19 +495,19 @@ def logpsum3():
                 # return str(result)
                 date_Psum = []
                 Psum = []
-                
+
 
                 if date_Psum == []:
                     for k in result:
                         date = str(k['Log_Date']).split()
                         date_Psum.append(date[1])
 
-                
+
                 for j in result:
                     print str(j['Log_PSum'])
                     Psum.append(str(j['Log_PSum']))
                 name = i['MeterName']            # num = num+1
-            
+
 
 
             # return 'ok'
@@ -516,7 +515,7 @@ def logpsum3():
                 list_psum.append({"name":str(name),"data":Psum })
 
         return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
-    
+
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
@@ -568,10 +567,10 @@ def datameter():
                     "RT_F":str(i['RT_F']),
                     "RT_kWh":str(i['RT_kWh']),
                     })
-        
+
 
         return jsonify({"status": "success","datameter":list_data})
-    
+
     except Exception as e:
         return jsonify({"status": "fail","messgae":str(e)})
 
@@ -593,7 +592,7 @@ def logpsumall():
         result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
         # return 's'
         for s in result_site:
-        
+
             result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(s['ZoneID'])+"'")
             # return  str(result_meter)
             for i in result_meter:
@@ -608,18 +607,18 @@ def logpsumall():
                     Psum.append("")
 
                 if result_log != [] :
-   
+
                     for j in result_log:
                          Psum[j['HourInDay']] = str(j['diff'])
 
-   
 
-                name = "ZoneID " +str(s['ZoneID'])+" ("+i['MeterName']+")" 
+
+                name = "ZoneID " +str(s['ZoneID'])+" ("+i['MeterName']+")"
 
                 list_psum.append({"name":str(name),"data":Psum })
 
         return jsonify({"status": "success","list_psum":list_psum,"hour_Psum":date_Psum})
-    
+
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
@@ -635,7 +634,7 @@ def sumdayavg():
         date_Psum = []
         Psum = []
         result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
-       
+
         list_meter = []
         for r in result_site:
 
@@ -651,22 +650,22 @@ def sumdayavg():
         now = datetime.datetime.now()
         month_range = calendar.monthrange(now.year, now.month)[1]
         # return str(int(month_range)-1)
-        
+
 
         month = calendar.month_name[result[0]['monthInYear']]
-        
+
         for x in range(1, int(month_range)+1):
             date = str(month)+' '+str(x)
             dayInMonth.append(str(date))
             diff.append('0')
             # print str(x)
-        
+
 
         for i in result:
             # print str(i['dayInMonth'])
             date = str(month)+' '+str(i['dayInMonth'])
             dayInMonth[i['dayInMonth']] = str(date)
-            diff2 = int(i['diff'])          
+            diff2 = int(i['diff'])
             # diff2 = float(i['diff'])/1000
 
             # diff2 = "%.1f" % diff2
@@ -696,16 +695,16 @@ def sumday():
         now = datetime.datetime.now()
         month_range = calendar.monthrange(now.year, now.month)[1]
         # return str(int(month_range)-1)
-        
+
 
         month = calendar.month_name[result[0]['monthInYear']]
-        
+
         for x in range(1, int(month_range)+1):
             date = str(month)+' '+str(x)
             dayInMonth.append(str(date))
             diff.append('0')
             # print str(x)
-        
+
 
         for i in result:
             # print str(i['dayInMonth'])
@@ -735,7 +734,7 @@ def sumyearavg():
         date_Psum = []
         Psum = []
         result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
-       
+
         list_meter = []
         for r in result_site:
 
@@ -754,7 +753,7 @@ def sumyearavg():
             monthInYear.append(str(calendar.month_name[x]))
             diff.append('0')
             # print str(x)
-            
+
         for i in result:
             # print str(i['dayInMonth'])
             # date = str(month)+' '+str(result[0]['dayInMonth'])
@@ -789,7 +788,7 @@ def sumyear():
             monthInYear.append(str(calendar.month_name[x]))
             diff.append('0')
             # print str(x)
-            
+
         for i in result:
             # print str(i['dayInMonth'])
             # date = str(month)+' '+str(result[0]['dayInMonth'])
