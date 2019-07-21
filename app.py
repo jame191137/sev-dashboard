@@ -23,8 +23,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -362,7 +362,7 @@ def logpsumavg():
         if date_Psum == []:
             # n = 0
             for k in result:
-                
+
                 date = str(k['Log_Date']).split()
                 # return str(date[1])
                 time = date[1]
