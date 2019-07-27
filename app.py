@@ -12,6 +12,7 @@ import datetime
 import os
 from functools import wraps
 import calendar
+import paho.mqtt.client as paho
 # import mysql.connector
 # from gevent import pywsgi
 
@@ -23,12 +24,42 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
 mysql.init_app(app)
+
+
+def on_connect(client, userdata, flags, rc):
+    print "connected"
+    # current_app.logger.info("CONNACK received with code %d." % (rc))
+
+
+@app.route('/publish', methods=['POST'])
+def public():
+
+    try:
+        data = request.json
+        path = data['path']
+        value = data['value']
+
+        client = paho.Client()
+        print "connecting....."
+        client.on_connect = on_connect
+        client.username_pw_set("smartautomation", "0000")
+        client.connect("35.186.149.130")
+        print "connected"
+        client.publish(path,value)
+        print "publish....."
+
+
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+
 
 @app.route('/', methods=['GET'])
 def ok():
@@ -361,45 +392,79 @@ def logpsumavg():
 
         if date_Psum == []:
             # n = 0
-            for k in result:
+            # for k in result:
+            i = 0
+            # i = 134
+            numtime = 0
+            while i < 144:
 
-                date = str(k['Log_Date']).split()
-                # return str(date[1])
-                time = date[1]
-                checktimenew = time[1]
-                # return str(checktimenew)
-                print str(time)
-                print str(checktimenew)
-                checktimeold
+                # date = str(k['Log_Date']).split()
 
-                if time[3] == '0':
+                # time = date[1]
+                # checktimenew = time[1]
+
+                # print str(time)
+                # print str(checktimenew)
+
+
+                # if time[3] == '0':
+                # # if checktimenew != checktimeold:
+                #     date_Psum.append(date[1])
+
+                #     # checktimeold = checktimenew
+                # else:
+                #     date_Psum.append('')
+                # # n=n+1
+
+                s = ":00:00"
+
+                if i%6 == 0:
                 # if checktimenew != checktimeold:
-                    date_Psum.append(date[1])
+                    time = str(numtime).zfill(2)
+                    # time = str(numtime).zfill(2)+s
+                    date_Psum.append(time)
+                    numtime = numtime +1
                     # checktimeold = checktimenew
                 else:
                     date_Psum.append('')
                 # n=n+1
 
+                Psum.append('')
+                i=i+1
+
+
+        numj = len(result)-1
+        # sss = len(date_Psum)-1
+        # return str(sss)
+        # return str(numj)
 
         for j in result:
-            print str(j['Log_PSum'])
-            Psum.append(str(j['Log_PSum']))
+            # print str(j['Log_PSum'])
 
-        for j in result:
-            print str(j['baseLine'])
-            baseLine.append(str(j['baseLine']))
+            Psum[numj] = str(j['Log_PSum'])       
+            # Psum.append(str(j['Log_PSum']))     
+            numj = numj-1
+
+        # for j in result:
+        #     print str(j['baseLine'])
+        #     baseLine.append(str(j['baseLine']))        
+
+        for j in Psum:
+            # print str(j['baseLine'])
+            baseLine.append(str(result[0]['baseLine']))
+
         name = 'Meter'            # num = num+1
 
 
 
         # return 'ok'
         # result.append({"name":str(name),"data":Psum })
-        list_psum.append({"name":'Meter',"data":Reverse(Psum) })
-        list_psum.append({"name":'Base Line',"data":Reverse(baseLine) })
+        list_psum.append({"name":'Meter',"data":Psum })
+        list_psum.append({"name":'Base Line',"data":baseLine })
         # return str(Reverse(date_Psum))
         # re_date_Psum = date_Psum.reverse()
         # return str(re_date_Psum)
-        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":Reverse(date_Psum)})
+        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
 
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
