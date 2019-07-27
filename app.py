@@ -24,8 +24,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -352,6 +352,28 @@ def cb_uptime():
 #     except Exception as e:
 #         return jsonify({"status": "fail","message":str(e)})
 
+@app.route('/meterstatus', methods=['POST'])
+def listmeterstatus():
+    try:
+        data = request.json
+        # SiteID = data['SiteID']
+        list_psum = []
+        date_Psum = []
+        Psum = []
+        # result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+        #
+        list_meter = []
+        # for r in result_site:
+
+        result_meter = querySelect_DB("SELECT Meter_Status,MeterID FROM meter_info")
+        for r in result_meter:
+            list_meter.append(r['Meter_Status'])
+
+        return jsonify({"status": "success","list_meter_status":list_meter})
+
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
 @app.route('/logpsumavg', methods=['POST'])
 def logpsumavg():
     try:
@@ -441,13 +463,13 @@ def logpsumavg():
         for j in result:
             # print str(j['Log_PSum'])
 
-            Psum[numj] = str(j['Log_PSum'])       
-            # Psum.append(str(j['Log_PSum']))     
+            Psum[numj] = str(j['Log_PSum'])
+            # Psum.append(str(j['Log_PSum']))
             numj = numj-1
 
         # for j in result:
         #     print str(j['baseLine'])
-        #     baseLine.append(str(j['baseLine']))        
+        #     baseLine.append(str(j['baseLine']))
 
         for j in Psum:
             # print str(j['baseLine'])
