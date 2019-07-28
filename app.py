@@ -9,6 +9,7 @@ import requests
 from flaskext.mysql import MySQL
 # from flask import Flask, current_app
 import datetime
+from datetime import datetime
 import os
 from functools import wraps
 import calendar
@@ -367,9 +368,82 @@ def listmeterstatus():
 
         result_meter = querySelect_DB("SELECT Meter_Status,MeterID FROM meter_info")
         for r in result_meter:
-            list_meter.append(r['Meter_Status'])
+            if str(r['Meter_Status']) == '1':
+                list_meter.append(True)
+            else:
+                list_meter.append(False)
 
         return jsonify({"status": "success","list_meter_status":list_meter})
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+@app.route('/schedulestatus', methods=['POST'])
+def listschedule():
+    try:
+        data = request.json
+        # SiteID = data['SiteID']
+        # list_psum = []
+        # date_Psum = []
+        # Psum = []
+        # result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+        #
+        list_time = []
+        # for r in result_site:
+
+        result_schedule = querySelect_DB("SELECT*FROM schedule_data")
+
+        # a = datetime.strptime(result_schedule[0]['d1_close_time'], "%m/%j/%y %H:%M")
+        # a = t.strftime ('%H:%M:%S')
+        # return str(a)
+        for i in result_schedule:
+            t = i['time']
+            time = t.strftime ('%H:%M')
+            list_time.append(time)
+        return jsonify({"status": "success","list_time":list_time})
+
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+@app.route('/setschedule', methods=['POST'])
+def set_schedule():
+    try:
+        data = request.json
+        d1_open_time = data['d1_open_time']
+        d1_close_time = data['d1_close_time']
+        d2_open_time = data['d2_open_time']
+        d2_close_time = data['d2_close_time']
+        d3_open_time = data['d3_open_time']
+        d3_close_time = data['d3_close_time']
+        d4_open_time = data['d4_open_time']
+        d4_close_time = data['d4_close_time']
+        d5_open_time = data['d5_open_time']
+        d5_close_time = data['d5_close_time']
+        d6_open_time = data['d6_open_time']
+        d6_close_time = data['d6_close_time']
+        d7_open_time = data['d7_open_time']
+        d7_close_time = data['d7_close_time']
+
+        d1_open_time = "2001-01-01 "+d1_open_time+":00"
+        d1_close_time = "2001-01-01 "+d1_close_time+":00"
+        d2_open_time = "2001-01-01 "+d2_open_time+":00"
+        d2_close_time = "2001-01-01 "+d2_close_time+":00"
+        d3_open_time = "2001-01-01 "+d3_open_time+":00"
+        d3_close_time = "2001-01-01 "+d3_close_time+":00"
+        d4_open_time = "2001-01-01 "+d4_open_time+":00"
+        d4_close_time = "2001-01-01 "+d4_close_time+":00"
+        d5_open_time = "2001-01-01 "+d5_open_time+":00"
+        d5_close_time = "2001-01-01 "+d5_close_time+":00"
+        d6_open_time = "2001-01-01 "+d6_open_time+":00"
+        d6_close_time = "2001-01-01 "+d6_close_time+":00"
+        d7_open_time = "2001-01-01 "+d7_open_time+":00"
+        d7_close_time = "2001-01-01 "+d7_close_time+":00"
+
+        list_time = []
+        # for r in result_site:
+
+        result_schedule = update_DB("UPDATE schedule_data SET time = CASE WHEN date = 'd1_open_time' THEN '"+str(d1_open_time)+"' WHEN date = 'd1_close_time' THEN '"+str(d1_close_time)+"' WHEN date = 'd2_open_time' THEN '"+str(d2_open_time)+"' WHEN date = 'd2_close_time' THEN '"+str(d2_close_time)+"' WHEN date = 'd3_open_time' THEN '"+str(d3_open_time)+"' WHEN date = 'd3_close_time' THEN '"+str(d3_close_time)+"' WHEN date = 'd4_open_time' THEN '"+str(d4_open_time)+"' WHEN date = 'd4_close_time' THEN '"+str(d4_close_time)+"' WHEN date = 'd5_open_time' THEN '"+str(d5_open_time)+"' WHEN date = 'd5_close_time' THEN '"+str(d5_close_time)+"' WHEN date = 'd6_open_time' THEN '"+str(d6_open_time)+"' WHEN date = 'd6_close_time' THEN '"+str(d6_close_time)+"' WHEN date = 'd7_open_time' THEN '"+str(d7_open_time)+"' WHEN date = 'd7_close_time' THEN '"+str(d7_close_time)+"' ELSE time END")
+        # return str(result_schedule)
+        return jsonify({"status": "success"})
 
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
