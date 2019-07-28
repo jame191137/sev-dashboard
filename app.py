@@ -9,7 +9,7 @@ import requests
 from flaskext.mysql import MySQL
 # from flask import Flask, current_app
 import datetime
-from datetime import datetime
+from datetime import datetime as dt
 import os
 from functools import wraps
 import calendar
