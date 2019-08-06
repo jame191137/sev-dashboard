@@ -25,8 +25,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -863,6 +863,53 @@ def sumdayavg():
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
+@app.route('/sumdayavg2', methods=['POST'])
+def sumdayavg2():
+    try:
+        data = request.json
+
+        SiteID = data['SiteID']
+        list_psum = []
+        date_Psum = []
+        Psum = []
+        result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+
+        list_meter = []
+        for r in result_site:
+
+            result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
+            list_meter.append(result_meter[0]['MeterID'])
+
+        result = querySelect_DB("SELECT month(log_Date) monthInYear,Day(log_Date) dayInMonth,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 30 day) And Year(log_date) = Year(CURDATE()) and (MeterID = '"+str(list_meter[0])+"' Or  MeterID = '"+str(list_meter[1])+"' Or MeterID = '"+str(list_meter[2])+"') group by dayInMonth order by monthInYear,dayInMonth")
+        if result == [] or result == False:
+            return jsonify({"status": "fail","message":"not found"})
+
+
+        # return str(result)
+        dayInMonth = []
+        diff = []
+        now = datetime.datetime.now()
+        month_range = calendar.monthrange(now.year, now.month)[1]
+
+        for i in result:
+            month = calendar.month_name[i['monthInYear']]
+            date = str(month)+' '+str(i['dayInMonth'])
+            dayInMonth.append(str(date))
+
+            # diff2 = int(i['sv'])
+            diff2 = "%.2f" % i['diff']
+            #
+            if str(diff2) == '0.00':
+                diff2 = 0
+
+            # diff[i['dayInMonth']] = str(diff2)
+            diff.append(str(diff2))
+
+        return jsonify({"status": "success","dayInMonth":dayInMonth,"diff":diff})
+
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
 @app.route('/sumday', methods=['POST'])
 def sumday():
     try:
@@ -1036,6 +1083,52 @@ def sumyearavg():
             list_meter.append(result_meter[0]['MeterID'])
 
         result = querySelect_DB("SELECT month(log_Date) monthInYear,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where year(log_Date) = year(CURDATE()) AND (MeterID = '"+str(list_meter[0])+"' Or  MeterID = '"+str(list_meter[0])+"' Or MeterID = '"+str(list_meter[0])+"' )group by monthInYear order by monthInYear;")
+        if result == [] or result == False:
+            return jsonify({"status": "fail","message":"not found"})
+        # return str(result)
+        monthInYear = []
+        diff = []
+
+        for x in range(1, 13):
+            # date = str(month)+' '+str(x)
+            monthInYear.append(str(calendar.month_name[x]))
+            diff.append('0')
+            # print str(x)
+
+        for i in result:
+            # print str(i['dayInMonth'])
+            # date = str(month)+' '+str(result[0]['dayInMonth'])
+            monthInYear[i['monthInYear']-1] = str(calendar.month_name[i['monthInYear']])
+            diff2 = int(i['diff'])
+
+            # diff2 = "%.1f" % diff2
+            if str(diff2) == '0.00':
+                diff2 = 0
+            diff[i['monthInYear']-1] = str(diff2)
+
+        return jsonify({"status": "success","monthInYear":monthInYear,"diff":diff})
+
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+@app.route('/sumyearavg2', methods=['POST'])
+def sumyearavg2():
+    try:
+        data = request.json
+
+        SiteID = data['SiteID']
+        list_psum = []
+        date_Psum = []
+        Psum = []
+        result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+
+        list_meter = []
+        for r in result_site:
+
+            result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
+            list_meter.append(result_meter[0]['MeterID'])
+
+        result = querySelect_DB("SELECT month(log_Date) monthInYear,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where   log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 12 month) AND (MeterID = '"+str(list_meter[0])+"' Or  MeterID = '"+str(list_meter[0])+"' Or MeterID = '"+str(list_meter[0])+"' )group by monthInYear order by monthInYear;")
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
         # return str(result)
