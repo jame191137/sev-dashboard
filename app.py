@@ -973,27 +973,47 @@ def savemonth():
         result = querySelect_DB("SELECT month(Log_Date) monthInYear,year(Log_Date),sum(Log_kWh_Diff) as diff,100 - ((sum(Log_kWh_Diff) / (baseLine * 720)) * 100) as sv,baseLine * 24 as base FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE  log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 12 month) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by year(Log_Date),month(Log_Date) order by year(Log_Date),month(Log_Date)")
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
+
         # return str(result)
         dayInMonth = []
         diff = []
+        monthInYear = []
         now = datetime.datetime.now()
         month_range = calendar.monthrange(now.year, now.month)[1]
 
-        for i in result:
-            month = calendar.month_name[i['monthInYear']]
-            date = str(month)
-            dayInMonth.append(str(date))
+        for x in range(1, 13):
+            # date = str(month)+' '+str(x)
+            monthInYear.append(str(calendar.month_name[x]))
+            diff.append('0')
+            # print str(x)
 
-            # diff2 = int(i['sv'])
-            diff2 = "%.2f" % i['sv']
-            #
+        # return str(monthInYear)
+        for i in result:
+            # print str(i['dayInMonth'])
+            # date = str(month)+' '+str(result[0]['dayInMonth'])
+            monthInYear[i['monthInYear']-1] = str(calendar.month_name[i['monthInYear']])
+            diff2 = int(i['diff'])
+
+            # diff2 = "%.1f" % diff2
             if str(diff2) == '0.00':
                 diff2 = 0
+            diff[i['monthInYear']-1] = str(diff2)
 
-            # diff[i['dayInMonth']] = str(diff2)
-            diff.append(str(diff2))
+        # for i in result:
+        #     month = calendar.month_name[i['monthInYear']]
+        #     date = str(month)
+        #     dayInMonth.append(str(date))
+        #
+        #     # diff2 = int(i['sv'])
+        #     diff2 = "%.2f" % i['sv']
+        #     #
+        #     if str(diff2) == '0.00':
+        #         diff2 = 0
+        #
+        #     # diff[i['dayInMonth']] = str(diff2)
+        #     diff.append(str(diff2))
 
-        return jsonify({"status": "success","dayInMonth":dayInMonth,"diff":diff})
+        return jsonify({"status": "success","monthInYear":monthInYear,"diff":diff})
 
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
