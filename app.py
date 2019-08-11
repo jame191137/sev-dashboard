@@ -1039,7 +1039,7 @@ def savemonth():
             # print str(i['dayInMonth'])
             # date = str(month)+' '+str(result[0]['dayInMonth'])
             monthInYear[i['monthInYear']-1] = str(calendar.month_name[i['monthInYear']])
-            diff2 = int(i['diff'])
+            diff2 = int(i['sv'])
 
             # diff2 = "%.1f" % diff2
             if str(diff2) == '0.00':
