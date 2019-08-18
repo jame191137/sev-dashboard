@@ -25,8 +25,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -448,8 +448,8 @@ def set_schedule():
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
 
-@app.route('/logpsumavg', methods=['POST'])
-def logpsumavg():
+@app.route('/logpsumavgold', methods=['POST'])
+def logpsumavgold():
     try:
         data = request.json
         SiteID = data['SiteID']
@@ -482,6 +482,7 @@ def logpsumavg():
 
         # a = ['0.00','1.00','2.00','3.00','4.00','5.00','6.00']
 
+
         # for i in a:
         checktimenew = ''
         checktimeold = ''
@@ -512,7 +513,7 @@ def logpsumavg():
                 #     date_Psum.append('')
                 # # n=n+1
 
-                s = ":00:00"
+                # s = ":00:00"
 
                 if i%6 == 0:
                 # if checktimenew != checktimeold:
@@ -548,6 +549,147 @@ def logpsumavg():
         for j in Psum:
             # print str(j['baseLine'])
             baseLine.append(str(result[0]['baseLine']))
+
+        name = 'Meter'            # num = num+1
+
+
+
+        # return 'ok'
+        # result.append({"name":str(name),"data":Psum })
+        list_psum.append({"name":'Meter',"data":Psum })
+        list_psum.append({"name":'Base Line',"data":baseLine })
+        # return str(Reverse(date_Psum))
+        # re_date_Psum = date_Psum.reverse()
+        # return str(re_date_Psum)
+        return jsonify({"status": "success","list_psum":list_psum,"date_Psum":date_Psum})
+
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+@app.route('/logpsumavg', methods=['POST'])
+def logpsumavg():
+    try:
+        data = request.json
+        SiteID = data['SiteID']
+        list_psum = []
+        date_Psum = []
+        Psum = []
+        result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+
+        list_meter = []
+        for r in result_site:
+
+            result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
+            list_meter.append(result_meter[0]['MeterID'])
+
+        # return str(list_meter)
+
+        #result = querySelect_DB("SELECT Log_Date,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 2 HOUR) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC")
+        result = querySelect_DB("SELECT DATE_FORMAT(Log_Date,'%H:%i') TIMEONLY,sum(Log_PSum) as Log_PSum,baseLine FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE day(log_date) = day(curdate()) and month(log_date) = month(curdate()) and year(log_date) = year(curdate()) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by log_date order by log_date DESC")
+        # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
+        # print str(result)
+
+        if result == [] or result == False:
+            return jsonify({"status": "fail","message":"not found"})
+        # return str(result)
+        date_Psum = []
+        Psum = []
+        baseLine = []
+
+
+        list_time = []
+
+        m = 0
+        while m < 24:
+            n = 0
+            while n < 6:
+
+                
+
+                time_str = str(m).zfill(2)+':'+str(n)+'0'
+                list_time.append(str(time_str))
+                n = n+1
+            m = m+1
+
+        # return str(list_time)
+        # for i in a:
+        checktimenew = ''
+        checktimeold = ''
+
+        if date_Psum == []:
+            # n = 0
+            # for k in result:
+            i = 0
+            # i = 134
+            numtime = 0
+            while i < 144:
+
+                # date = str(k['Log_Date']).split()
+
+                # time = date[1]
+                # checktimenew = time[1]
+
+                # print str(time)
+                # print str(checktimenew)
+
+
+                # if time[3] == '0':
+                # # if checktimenew != checktimeold:
+                #     date_Psum.append(date[1])
+
+                #     # checktimeold = checktimenew
+                # else:
+                #     date_Psum.append('')
+                # # n=n+1
+
+                # s = ":00:00"
+
+                if i%6 == 0:
+                # if checktimenew != checktimeold:
+                    time = str(numtime).zfill(2)
+                    # time = str(numtime).zfill(2)+s
+                    date_Psum.append(time)
+                    numtime = numtime +1
+                    # checktimeold = checktimenew
+                else:
+                    date_Psum.append('')
+                # n=n+1
+
+                Psum.append('')
+                i=i+1
+
+
+        numj = len(result)-1
+
+
+        for j in result:
+
+            count = 0
+            for k in list_time:
+
+                if str(j['TIMEONLY']) == str(k):
+                    # return str(k)
+                    # return str(count)
+                    Psum[count] = str(j['Log_PSum'])
+
+                count = count+1
+
+
+        # for j in result:
+            
+
+        #     Psum[numj] = str(j['Log_PSum'])
+        #     # Psum.append(str(j['Log_PSum']))
+        #     numj = numj-1
+
+
+        for j in Psum:
+            # print str(j['baseLine'])
+            baseLine.append('')
+            # baseLine.append(str(result[0]['baseLine']))
+
+        baseLine[0] = str(result[0]['baseLine'])
+        baseLine[len(Psum)-1] = str(result[0]['baseLine'])
 
         name = 'Meter'            # num = num+1
 
