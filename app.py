@@ -604,7 +604,7 @@ def logpsumavg():
             n = 0
             while n < 6:
 
-                
+
 
                 time_str = str(m).zfill(2)+':'+str(n)+'0'
                 list_time.append(str(time_str))
@@ -676,7 +676,7 @@ def logpsumavg():
 
 
         # for j in result:
-            
+
 
         #     Psum[numj] = str(j['Log_PSum'])
         #     # Psum.append(str(j['Log_PSum']))
@@ -685,11 +685,11 @@ def logpsumavg():
 
         for j in Psum:
             # print str(j['baseLine'])
-            baseLine.append('')
-            # baseLine.append(str(result[0]['baseLine']))
+            # baseLine.append('')
+            baseLine.append(str(result[0]['baseLine']))
 
-        baseLine[0] = str(result[0]['baseLine'])
-        baseLine[len(Psum)-1] = str(result[0]['baseLine'])
+        # baseLine[0] = str(result[0]['baseLine'])
+        # baseLine[len(Psum)-1] = str(result[0]['baseLine'])
 
         name = 'Meter'            # num = num+1
 
