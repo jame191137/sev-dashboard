@@ -25,8 +25,8 @@ CORS(app, resources={r"/*": {"origins": "*"}} )
 app.config['MYSQL_DATABASE_USER'] = 'smart'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'P@ssword'
 app.config['MYSQL_DATABASE_DB'] = 'cp_warehouse'
-app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
-# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# app.config['MYSQL_DATABASE_HOST'] = '35.186.149.130'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
 
 mysql = MySQL()
@@ -97,6 +97,19 @@ def datatable():
         # dateEnd = str(dateEnd) + ' 00:00:00'
         # MeterID = str(MeterID) + ' 00:00:00'
         list_data = []
+
+        # if str(MeterID) == 'all':
+        #     result_meter = querySelect_DB("SELECT*FROM meter_log WHERE Log_Date >= '"+str(dateStart)+"' AND Log_Date <= '"+str(dateEnd)+"'   ")
+        #     for i in result_meter:
+        #         list_data.append(
+        #             {
+        #             "kw":str(i['kw']),
+        #             "kwh":str(i['kwh'])
+        #             })
+        #
+        #     return jsonify({"status": "success","list_data":list_data})
+        #
+        # else:
         result_meter = querySelect_DB("SELECT*FROM meter_log WHERE MeterID = '"+MeterID+"' AND Log_Date >= '"+str(dateStart)+"' AND Log_Date <= '"+str(dateEnd)+"'   ")
         # result = querySelect_DB("SELECT Log_Date,Log_PSum FROM meter_log WHERE MeterID = '"+MeterID+"' LIMIT 8")
         # return str(result_meter)
@@ -137,7 +150,53 @@ def datatable():
                 "Log_kWh":str(i['Log_kWh']),
                 "Log_kWh_Diff":str(i['Log_kWh_Diff'])
                 })
-        # print str(list_data)
+
+        return jsonify({"status": "success","list_data":list_data})
+
+    except Exception as e:
+        return jsonify({"status": "fail","message":str(e)})
+
+@app.route('/datatablekwh', methods=['POST'])
+def datatablekwh():
+    try:
+        data = request.json
+
+        dateStart = data['dateStart']
+        dateEnd = data['dateEnd']
+        SiteID = data['SiteID']
+
+        # dateEnd = str(dateEnd) + ' 00:00:00'
+        # MeterID = str(MeterID) + ' 00:00:00'
+        list_data = []
+        result_site = querySelect_DB("SELECT * FROM zone_info WHERE SiteID = '"+str(SiteID)+"'")
+
+        list_meter = []
+        for r in result_site:
+
+            result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
+            list_meter.append(result_meter[0]['MeterID'])
+
+        # return str(list_meter)
+
+        result_meter = querySelect_DB("SELECT a.log_date ,a.Log_kWh_Diff + b.Log_kWh_Diff + c.Log_kWh_Diff as Sum_Energy ,a.Log_psum as Zone1_kW ,a.Log_kWh_Diff as Zone1_Energy ,b.Log_psum as Zone2_kW ,b.Log_kWh_Diff as Zone2_Energy ,c.Log_psum as Zone3_kW ,c.Log_kWh_Diff as Zone3_Energy FROM cp_warehouse.meter_log a join cp_warehouse.meter_log b on a.log_date = b.log_date join cp_warehouse.meter_log c on a.log_date = c.log_date where a.meterID = '"+str(list_meter[0])+"' and b.meterID = '"+str(list_meter[1])+"' and c.meterID = '"+str(list_meter[2])+"' and a.log_date between '"+str(dateStart)+"' and '"+str(dateEnd)+"';")
+
+
+        if result_meter == [] or result_meter == False:
+            return jsonify({"status": "fail","message":"not found"})
+
+        for i in result_meter:
+            list_data.append(
+                {
+                "log_date":str(i['log_date']),
+                "Sum_Energy":str(i['Sum_Energy']),
+                "Zone1_kW":str(i['Zone1_kW']),
+                "Zone1_Energy":str(i['Zone1_Energy']),
+                "Zone2_kW":str(i['Zone2_kW']),
+                "Zone2_Energy":str(i['Zone2_Energy']),
+                "Zone3_kW":str(i['Zone3_kW']),
+                "Zone3_Energy":str(i['Zone3_Energy'])
+                })
+
         return jsonify({"status": "success","list_data":list_data})
 
     except Exception as e:
@@ -1114,12 +1173,14 @@ def savedayyy():
             result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
             list_meter.append(result_meter[0]['MeterID'])
 
-        result = querySelect_DB("SELECT day(Log_Date) dayInMonth,month(Log_Date) monthInYear,year(Log_Date),sum(Log_kWh_Diff) as diff,100 - ((sum(Log_kWh_Diff) / (baseLine * 24)) * 100) as sv,baseLine * 24 as base FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 30 day) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by year(Log_Date),month(Log_Date),day(Log_Date) order by year(Log_Date),month(Log_Date)")
+        result = querySelect_DB("SELECT day(Log_Date) dayInMonth,month(Log_Date) monthInYear,year(Log_Date),sum(Log_kWh_Diff) as diff,100 - ((sum(Log_kWh_Diff) / (baseLine * 24)) * 100) as sv,baseLine * 24 as base ,(baseLine * 24) - sum(Log_kWh_Diff) as Save_Energy FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 30 day) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by year(Log_Date),month(Log_Date),day(Log_Date) order by year(Log_Date),month(Log_Date)")
+
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
-        # return str(result)
+        # return str(result[0])
         dayInMonth = []
         diff = []
+        diff_kwh = []
         now = datetime.datetime.now()
         month_range = calendar.monthrange(now.year, now.month)[1]
 
@@ -1136,8 +1197,9 @@ def savedayyy():
 
             # diff[i['dayInMonth']] = str(diff2)
             diff.append(str(diff2))
+            diff_kwh.append(str(i['Save_Energy']))
 
-        return jsonify({"status": "success","dayInMonth":dayInMonth,"diff":diff})
+        return jsonify({"status": "success","dayInMonth":dayInMonth,"diff":diff,"diff_kwh":diff_kwh})
 
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
@@ -1159,13 +1221,14 @@ def savemonth():
             result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
             list_meter.append(result_meter[0]['MeterID'])
 
-        result = querySelect_DB("SELECT month(Log_Date) monthInYear,year(Log_Date),sum(Log_kWh_Diff) as diff,100 - ((sum(Log_kWh_Diff) / (baseLine * 720)) * 100) as sv,baseLine * 24 as base FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE  log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 12 month) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by year(Log_Date),month(Log_Date) order by year(Log_Date),month(Log_Date)")
+        result = querySelect_DB("SELECT month(Log_Date) monthInYear,year(Log_Date),sum(Log_kWh_Diff) as diff,100 - ((sum(Log_kWh_Diff) / (baseLine * 720)) * 100) as sv,baseLine * 24 as base ,(baseLine * 720) - sum(Log_kWh_Diff) as Save_Energy FROM cp_warehouse.meter_log left join cp_warehouse.meter_Info on cp_warehouse.meter_log.meterID = cp_warehouse.meter_Info.meterID left join cp_warehouse.zone_info on cp_warehouse.meter_Info.ZoneID = cp_warehouse.zone_Info.ZoneID left join cp_warehouse.site_info on cp_warehouse.zone_Info.SiteID = cp_warehouse.site_info.siteID WHERE  log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 12 month) and (meter_log.meterID = '"+str(list_meter[0])+"' or meter_log.meterID = '"+str(list_meter[1])+"' or meter_log.meterID = '"+str(list_meter[2])+"') group by year(Log_Date),month(Log_Date) order by year(Log_Date),month(Log_Date)")
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
 
         # return str(result)
         dayInMonth = []
         diff = []
+        diff_kwh = []
         monthInYear = []
         now = datetime.datetime.now()
         month_range = calendar.monthrange(now.year, now.month)[1]
@@ -1174,6 +1237,7 @@ def savemonth():
             # date = str(month)+' '+str(x)
             monthInYear.append(str(calendar.month_name[x]))
             diff.append('0')
+            diff_kwh.append('0')
             # print str(x)
 
         # return str(monthInYear)
@@ -1182,11 +1246,16 @@ def savemonth():
             # date = str(month)+' '+str(result[0]['dayInMonth'])
             monthInYear[i['monthInYear']-1] = str(calendar.month_name[i['monthInYear']])
             diff2 = int(i['sv'])
+            diff3 = int(i['Save_Energy'])
 
             # diff2 = "%.1f" % diff2
             if str(diff2) == '0.00':
                 diff2 = 0
             diff[i['monthInYear']-1] = str(diff2)
+
+            if str(diff3) == '0.00':
+                diff3 = 0
+            diff_kwh[i['monthInYear']-1] = str(diff3)
 
         # for i in result:
         #     month = calendar.month_name[i['monthInYear']]
@@ -1202,7 +1271,7 @@ def savemonth():
         #     # diff[i['dayInMonth']] = str(diff2)
         #     diff.append(str(diff2))
 
-        return jsonify({"status": "success","monthInYear":monthInYear,"diff":diff})
+        return jsonify({"status": "success","monthInYear":monthInYear,"diff":diff,"diff_kwh":diff_kwh})
 
     except Exception as e:
         return jsonify({"status": "fail","message":str(e)})
