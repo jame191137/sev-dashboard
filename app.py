@@ -1339,7 +1339,7 @@ def sumyearavg2():
             result_meter = querySelect_DB("SELECT MeterID,MeterName FROM meter_info WHERE ZoneID = '"+str(r['ZoneID'])+"'")
             list_meter.append(result_meter[0]['MeterID'])
 
-        result = querySelect_DB("SELECT month(log_Date) monthInYear,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where   log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 12 month) AND (MeterID = '"+str(list_meter[0])+"' Or  MeterID = '"+str(list_meter[0])+"' Or MeterID = '"+str(list_meter[0])+"' )group by monthInYear order by monthInYear;")
+        result = querySelect_DB("SELECT month(log_Date) monthInYear,sum(Log_kWh_Diff) as diff FROM cp_warehouse.meter_log where   log_date >= SUBDATE( CURRENT_TIMESTAMP, INTERVAL 12 month) AND (MeterID = '"+str(list_meter[0])+"' Or  MeterID = '"+str(list_meter[1])+"' Or MeterID = '"+str(list_meter[2])+"' )group by monthInYear order by monthInYear;")
         if result == [] or result == False:
             return jsonify({"status": "fail","message":"not found"})
         # return str(result)
